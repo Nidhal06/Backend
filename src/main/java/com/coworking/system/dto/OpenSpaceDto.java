@@ -18,8 +18,5 @@ public class OpenSpaceDto {
     @Positive
     private Integer capacity;
     
-    @NotBlank
-    private String location;
-    
     private Boolean isActive;
 }

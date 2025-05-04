@@ -89,7 +89,6 @@ public class UnavailabilityPeriodServiceImpl implements UnavailabilityPeriodServ
             spaceDto.setName(period.getOpenSpace().getName());
             spaceDto.setDescription(period.getOpenSpace().getDescription());
             spaceDto.setCapacity(period.getOpenSpace().getCapacity());
-            spaceDto.setLocation(period.getOpenSpace().getLocation());
             spaceDto.setIsActive(period.getOpenSpace().getIsActive());
             dto.setOpenSpace(spaceDto);
         }
@@ -111,7 +110,6 @@ public class UnavailabilityPeriodServiceImpl implements UnavailabilityPeriodServ
             spaceDto.setName(period.getPrivateSpace().getName());
             spaceDto.setDescription(period.getPrivateSpace().getDescription());
             spaceDto.setCapacity(period.getPrivateSpace().getCapacity());
-            spaceDto.setLocation(period.getPrivateSpace().getLocation());
             spaceDto.setPricePerHour(period.getPrivateSpace().getPricePerHour());
             spaceDto.setPricePerDay(period.getPrivateSpace().getPricePerDay());
             spaceDto.setIsActive(period.getPrivateSpace().getIsActive());

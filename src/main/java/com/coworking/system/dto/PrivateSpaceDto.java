@@ -18,9 +18,6 @@ private Long id;
     @Positive
     private Integer capacity;
     
-    @NotBlank
-    private String location;
-    
     @NotNull
     @Positive
     private Double pricePerHour;

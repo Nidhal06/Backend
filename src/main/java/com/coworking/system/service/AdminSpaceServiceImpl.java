@@ -8,6 +8,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.coworking.system.dto.AmenityDto;
 import com.coworking.system.dto.PrivateSpaceDto;
 import com.coworking.system.dto.PrivateSpaceResponseDto;
 import com.coworking.system.entity.Amenity;
@@ -24,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -97,7 +100,6 @@ public class AdminSpaceServiceImpl implements AdminSpaceService {
         if (dto.getName() != null) space.setName(dto.getName());
         if (dto.getDescription() != null) space.setDescription(dto.getDescription());
         if (dto.getCapacity() != null) space.setCapacity(dto.getCapacity());
-        if (dto.getLocation() != null) space.setLocation(dto.getLocation());
         if (dto.getPricePerHour() != null) space.setPricePerHour(dto.getPricePerHour());
         if (dto.getPricePerDay() != null) space.setPricePerDay(dto.getPricePerDay());
         if (dto.getIsActive() != null) space.setIsActive(dto.getIsActive());
@@ -157,12 +159,23 @@ public class AdminSpaceServiceImpl implements AdminSpaceService {
         List<PrivateSpace> spaces = repository.findAllWithAmenities();
 
         return spaces.stream()
-                .map(space -> {
-                    log.info("Mapping space: {}", space.getName());
-                    return modelMapper.map(space, PrivateSpaceResponseDto.class);
-                })
-                .collect(Collectors.toList());
-    }
+        	    .map((Function<PrivateSpace, PrivateSpaceResponseDto>) space -> {
+        	        log.info("Mapping space: {}", space.getName());
+        	        if (space.getAmenities() != null) {
+        	            log.info("Amenities count: {}", space.getAmenities().size());
+        	        }
+        	        PrivateSpaceResponseDto dto = modelMapper.map(space, PrivateSpaceResponseDto.class);
+        	        if (space.getAmenities() != null) {
+        	            dto.setAmenities(space.getAmenities().stream()
+        	                    .map(amenity -> modelMapper.map(amenity, AmenityDto.class))
+        	                    .collect(Collectors.toSet()));
+        	        } else {
+        	            dto.setAmenities(new HashSet<>());
+        	        }
+        	        return dto;
+        	    })
+        	    .collect(Collectors.toList());}
+
 
 
     @Override

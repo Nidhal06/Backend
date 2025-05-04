@@ -21,9 +21,6 @@ public class OpenSpace {
  private Integer capacity;
  
  @Column(nullable = false)
- private String location;
- 
- @Column(nullable = false)
  private Boolean isActive = true;
  
  @OneToMany(mappedBy = "openSpace", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -60,7 +60,6 @@ public class DataInitializer {
             OpenSpace openSpace = new OpenSpace();
             openSpace.setName("Espace Principal");
             openSpace.setCapacity(50);
-            openSpace.setLocation("Rez-de-chaussée");
             openSpace.setIsActive(true);
             openSpaceRepository.save(openSpace);
         }
@@ -69,7 +68,6 @@ public class DataInitializer {
             PrivateSpace privateSpace = new PrivateSpace();
             privateSpace.setName("Salle de réunion privée");
             privateSpace.setCapacity(10);
-            privateSpace.setLocation("1er étage");
             privateSpace.setPricePerHour(20.0);
             privateSpace.setPricePerDay(100.0);
             privateSpace.setIsActive(true);

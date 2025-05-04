@@ -57,16 +57,24 @@ public class WebSecurityConfig {
             .csrf().disable()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/coworker/**").hasRole("COWORKER")
-                .requestMatchers("/api/receptionist/**").hasRole("RECEPTIONIST")
-                .requestMatchers("/api/invoices/download/**").permitAll()
-                .anyRequest().authenticated()
-            )
+            	    .requestMatchers(
+            	        "/v3/api-docs/**",
+            	        "/swagger-ui/**",
+            	        "/swagger-ui.html",
+            	        "/swagger-resources/**",
+            	        "/webjars/**",
+            	        "/v3/api-docs.yaml"
+            	    ).permitAll()
+            	    .requestMatchers("/api/auth/**").permitAll()
+            	    .requestMatchers("/api/public/**").permitAll()
+            	    .requestMatchers("/uploads/**").permitAll()
+            	    .requestMatchers("/api/invoices/download/**").permitAll()
+            	    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            	    .requestMatchers("/api/coworker/**").hasRole("COWORKER")
+            	    .requestMatchers("/api/receptionist/**").hasRole("RECEPTIONIST")
+            	    .anyRequest().authenticated()
+            	)
+
             .authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

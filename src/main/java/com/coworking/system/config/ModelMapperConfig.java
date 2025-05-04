@@ -39,14 +39,14 @@ public class ModelMapperConfig {
             mapper.map(PrivateSpace::getName, PrivateSpaceResponseDto::setName);
             mapper.map(PrivateSpace::getDescription, PrivateSpaceResponseDto::setDescription);
             mapper.map(PrivateSpace::getCapacity, PrivateSpaceResponseDto::setCapacity);
-            mapper.map(PrivateSpace::getLocation, PrivateSpaceResponseDto::setLocation);
             mapper.map(PrivateSpace::getPricePerHour, PrivateSpaceResponseDto::setPricePerHour);
             mapper.map(PrivateSpace::getPricePerDay, PrivateSpaceResponseDto::setPricePerDay);
             mapper.map(PrivateSpace::getIsActive, PrivateSpaceResponseDto::setIsActive);
             mapper.map(PrivateSpace::getPhoto, PrivateSpaceResponseDto::setPhoto);
             mapper.map(PrivateSpace::getGallery, PrivateSpaceResponseDto::setGallery);
-            mapper.using(ctx -> mapAmenities(((PrivateSpace) ctx.getSource()).getAmenities()))
-                .map(PrivateSpace::getAmenities, PrivateSpaceResponseDto::setAmenities);
+            mapper.using(ctx -> mapAmenities((Set<Amenity>) ctx.getSource()))
+            .map(PrivateSpace::getAmenities, PrivateSpaceResponseDto::setAmenities);
+
         });
         
         // Payment mapping

@@ -3,7 +3,8 @@ package com.coworking.system;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import com.coworking.system.config.FileStorageProperties;
+
+import com.coworking.system.config.*;
 
 
 @SpringBootApplication
