@@ -1,0 +1,31 @@
+package com.coworking.backend.repository;
+
+import com.coworking.backend.model.Abonnement;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface AbonnementRepository extends JpaRepository<Abonnement, Long> {
+	@Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+		       "FROM Abonnement a " +
+		       "WHERE a.user.id = :userId " +
+		       "AND a.espaceOuvert.id = :espaceOuvertId " +
+		       "AND a.dateDebut <= :date " +
+		       "AND a.dateFin >= :date")
+		boolean existsByUserIdAndEspaceOuvertIdAndDateDebutLessThanEqualAndDateFinGreaterThanEqual(
+		    @Param("userId") Long userId, 
+		    @Param("espaceOuvertId") Long espaceOuvertId, 
+		    @Param("date") LocalDate date);
+	
+	List<Abonnement> findByUserId(Long userId);
+	
+	@Query("SELECT a FROM Abonnement a WHERE a.user.id = :userId AND a.espaceOuvert.id = :espaceId " +
+	           "AND a.dateDebut <= CURRENT_TIMESTAMP AND a.dateFin >= CURRENT_TIMESTAMP")
+	    Optional<Abonnement> findActiveByUserAndEspace(@Param("userId") Long userId, 
+	                                                @Param("espaceId") Long espaceId);
+}
