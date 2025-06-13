@@ -7,6 +7,7 @@ import com.coworking.backend.model.*;
 import com.coworking.backend.model.Paiement.PaiementStatut;
 import com.coworking.backend.model.Paiement.PaiementType;
 import com.coworking.backend.repository.EvenementRepository;
+import com.coworking.backend.repository.FactureRepository;
 import com.coworking.backend.repository.PaiementRepository;
 import com.coworking.backend.repository.UserRepository;
 import com.coworking.backend.repository.EspacePriveRepository;
@@ -18,10 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des événements.
+ * Gère les inscriptions des participants et les paiements associés.
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class EvenementService {
 
     private final EvenementRepository evenementRepository;
@@ -29,19 +36,29 @@ public class EvenementService {
     private final EspacePriveRepository espacePriveRepository;
     private final ModelMapper modelMapper;
     private final PaiementRepository paiementRepository;
+    private final FactureRepository factureRepository;
 
+    /**
+     * Récupère tous les événements
+     */
     public List<EvenementDTO> getAllEvenements() {
         return evenementRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère un événement par son ID
+     */
     public EvenementDTO getEvenementById(Long id) {
         Evenement evenement = evenementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evenement not found"));
         return convertToDto(evenement);
     }
 
+    /**
+     * Convertit une entité Evenement en DTO avec ses participants
+     */
     private EvenementDTO convertToDto(Evenement evenement) {
         EvenementDTO dto = modelMapper.map(evenement, EvenementDTO.class);
         
@@ -65,6 +82,9 @@ public class EvenementService {
         return dto;
     }
 
+    /**
+     * Crée un nouvel événement
+     */
     @Transactional
     public EvenementDTO createEvenement(EvenementDTO evenementDTO) {
         EspacePrive espace = espacePriveRepository.findById(evenementDTO.getEspaceId())
@@ -78,17 +98,29 @@ public class EvenementService {
         return convertToDto(savedEvenement);
     }
 
+    /**
+     * Met à jour un événement existant
+     */
     @Transactional
     public EvenementDTO updateEvenement(Long id, EvenementDTO evenementDTO) {
-        Evenement existingEvenement = evenementRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Evenement not found"));
-        
-        modelMapper.map(evenementDTO, existingEvenement);
-        Evenement updatedEvenement = evenementRepository.save(existingEvenement);
-        
-        return convertToDto(updatedEvenement);
+    Evenement existingEvenement = evenementRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Evenement not found"));
+    
+    // Mapper tous les champs sauf isActive
+    modelMapper.map(evenementDTO, existingEvenement);
+    
+    // Gérer explicitement isActive
+    if(evenementDTO.getIsActive() != null) {
+        existingEvenement.setActive(evenementDTO.getIsActive()); // Utilisez setActive au lieu de setIsActive
     }
+    
+    Evenement updatedEvenement = evenementRepository.save(existingEvenement);
+    return convertToDto(updatedEvenement);
+   }
 
+    /**
+     * Supprime un événement
+     */
     @Transactional
     public void deleteEvenement(Long id) {
         if (!evenementRepository.existsById(id)) {
@@ -97,6 +129,9 @@ public class EvenementService {
         evenementRepository.deleteById(id);
     }
 
+    /**
+     * Inscrit un utilisateur à un événement avec création d'un paiement
+     */
     @Transactional
     public EvenementDTO registerParticipant(Long evenementId, Long userId) {
         // Chargement optimisé avec les participants
@@ -142,9 +177,12 @@ public class EvenementService {
         return convertToDto(evenement);
     }
     
+    /**
+     * Annule la participation d'un utilisateur à un événement
+     */
     @Transactional
     public EvenementDTO cancelParticipation(Long evenementId, Long userId) {
-        Evenement evenement = evenementRepository.findById(evenementId)
+        Evenement evenement = evenementRepository.findByIdWithParticipantsAndPayments(evenementId)
                 .orElseThrow(() -> new ResourceNotFoundException("Evenement not found"));
         
         User user = userRepository.findById(userId)
@@ -154,7 +192,26 @@ public class EvenementService {
             throw new IllegalStateException("User is not registered for this event");
         }
         
+        // 1. D'abord supprimer les factures associées
+        Set<Paiement> paiementsToRemove = evenement.getPaiements().stream()
+                .filter(p -> p.getUser() != null && p.getUser().equals(user))
+                .collect(Collectors.toSet());
+        
+        // Supprimer d'abord les factures puis les paiements
+        paiementsToRemove.forEach(p -> {
+            if (p.getFacture() != null) {
+                factureRepository.deleteById(p.getFacture().getId());
+            }
+            paiementRepository.deleteById(p.getId());
+        });
+        
+        // 2. Nettoyer les collections en mémoire
+        evenement.getPaiements().removeAll(paiementsToRemove);
+        
+        // 3. Supprimer le participant
         evenement.getParticipants().remove(user);
+        
+        // 4. Sauvegarder les modifications
         Evenement updatedEvenement = evenementRepository.save(evenement);
         
         return convertToDto(updatedEvenement);

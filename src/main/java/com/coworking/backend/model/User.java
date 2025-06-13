@@ -1,23 +1,22 @@
 package com.coworking.backend.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
+import lombok.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Entité représentant un utilisateur du système
+ */
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
-	@Id
+    
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
@@ -34,13 +33,13 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserType type;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Abonnement> abonnements;
     
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Avis> avis;
     
     @ManyToMany(mappedBy = "participants")
@@ -48,6 +47,9 @@ public class User {
     @EqualsAndHashCode.Exclude
     private Set<Evenement> evenements = new HashSet<>();
     
+    /**
+     * Enumération des types d'utilisateurs
+     */
     public enum UserType {
         ADMIN, COWORKER, RECEPTIONISTE
     }

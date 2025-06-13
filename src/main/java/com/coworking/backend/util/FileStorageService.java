@@ -12,12 +12,21 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Service pour le stockage et la gestion des fichiers sur le système de fichiers local
+ */
 @Service
 public class FileStorageService {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+    /**
+     * Stocke un fichier uploadé sur le système de fichiers
+     * @param file Fichier à stocker
+     * @return URL relative du fichier stocké
+     * @throws IOException Si une erreur survient lors de l'écriture du fichier
+     */
     public String storeFile(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename();
         String extension = FilenameUtils.getExtension(originalFilename);
@@ -34,6 +43,11 @@ public class FileStorageService {
         return "/uploads/" + newFilename;
     }
     
+    /**
+     * Supprime une liste de fichiers du système de fichiers
+     * @param fileUrls Liste des URLs des fichiers à supprimer
+     * @throws RuntimeException Si une erreur survient lors de la suppression
+     */
     public void deleteFiles(List<String> fileUrls) {
         if (fileUrls == null || fileUrls.isEmpty()) {
             return;

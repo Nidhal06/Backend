@@ -5,6 +5,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
+/**
+ * Implémentation personnalisée de UserDetails pour Spring Security.
+ * Contient des informations supplémentaires comme l'ID de l'utilisateur.
+ */
 public class CustomUserDetails implements UserDetails {
 
 	private static final long serialVersionUID = 1L;

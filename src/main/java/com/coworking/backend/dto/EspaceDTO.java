@@ -1,11 +1,12 @@
 package com.coworking.backend.dto;
 
 import lombok.Data;
-
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * DTO de base pour les espaces
+ */
 @Data
 public class EspaceDTO {
     private Long id;
@@ -19,7 +20,6 @@ public class EspaceDTO {
     private boolean active;
     
     private String type;
-    
     private double prixParJour;
     private List<String> amenities;
 }

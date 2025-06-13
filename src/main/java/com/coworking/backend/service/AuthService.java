@@ -13,8 +13,12 @@ import com.coworking.backend.repository.PasswordResetTokenRepository;
 import com.coworking.backend.repository.UserRepository;
 import com.coworking.backend.util.EmailService;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,6 +31,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 
+/**
+ * Service d'authentification et de gestion des comptes utilisateurs.
+ * Gère :
+ * - L'authentification JWT
+ * - L'inscription
+ * - La réinitialisation de mot de passe
+ */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -43,6 +55,9 @@ public class AuthService {
     @Value("${app.reset-password.expiration-hours}")
     private int resetTokenExpirationHours;
 
+    /**
+     * Authentifie un utilisateur et génère un token JWT
+     */
     public AuthResponse authenticate(AuthRequest authRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -64,6 +79,9 @@ public class AuthService {
         }
     }
     
+    /**
+     * Enregistre un nouvel utilisateur
+     */
     public User registerUser(SignupRequest signUpRequest) {
         if(userRepository.existsByUsername(signUpRequest.getUsername())) {
             throw new BadRequestException("Username is already taken!");
@@ -91,53 +109,88 @@ public class AuthService {
     }
     
     
+    /**
+     * Lance le processus de réinitialisation de mot de passe
+     */
+    @Transactional
     public void processForgotPassword(String email) {
+        passwordResetTokenRepository.deleteAllExpired(); // Nettoyer les tokens expirés
+        
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-        // Generate token
-        String token = UUID.randomUUID().toString();
-        
-        // Create and save token
+        // Supprimer les anciens tokens de l'utilisateur
+        passwordResetTokenRepository.deleteAllByUserId(user.getId());
+
+        // Créer et sauvegarder le nouveau token
         PasswordResetToken resetToken = new PasswordResetToken();
-        resetToken.setToken(token);
+        resetToken.setToken(UUID.randomUUID().toString());
         resetToken.setUser(user);
         resetToken.setExpiryDate(LocalDateTime.now().plusHours(resetTokenExpirationHours));
-        passwordResetTokenRepository.save(resetToken);
 
-        // Send email
-        sendResetPasswordEmail(user, token);
+        // Sauvegarde FORCÉE en base avant l'envoi de l'e-mail
+        PasswordResetToken savedToken = passwordResetTokenRepository.saveAndFlush(resetToken);
+
+        // Envoyer l'e-mail avec le token
+        sendResetPasswordEmail(user, savedToken.getToken());
     }
 
+    /**
+     * Réinitialise le mot de passe avec un token valide
+     */
+    @Transactional
     public void resetPassword(String token, String newPassword) {
+        // First find the token without deleting expired ones
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadRequestException("Invalid token"));
+                .orElseThrow(() -> {
+                    log.error("Token not found: {}", token);
+                    return new BadRequestException("Token invalide ou expiré");
+                });
 
+        // Check if token is expired
         if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Token has expired");
+            passwordResetTokenRepository.delete(resetToken);
+            throw new BadRequestException("Token expiré");
         }
 
+        // Process the password reset
         User user = resetToken.getUser();
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-
+        
         // Delete the used token
         passwordResetTokenRepository.delete(resetToken);
+        
+        // Clean up expired tokens (but don't let it affect current operation)
+        try {
+            passwordResetTokenRepository.deleteAllExpired();
+        } catch (Exception e) {
+            log.warn("Failed to clean expired tokens", e);
+        }
     }
 
+    /**
+     * Envoie l'email de réinitialisation de mot de passe
+     */
     private void sendResetPasswordEmail(User user, String token) {
-        String resetUrl = "http://localhost:4200/reset-password?token=" + token;
+        try {
+            String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+            String resetUrl = "http://localhost:4200/reset-password?token=" + encodedToken;
 
-        Context context = new Context();
-        context.setVariable("name", user.getFirstName());
-        context.setVariable("resetUrl", resetUrl);
-        context.setVariable("expirationHours", resetTokenExpirationHours);
+            Context context = new Context();
+            context.setVariable("name", user.getFirstName());
+            context.setVariable("resetUrl", resetUrl);
+            context.setVariable("expirationHours", resetTokenExpirationHours);
 
-        emailService.sendTemplateEmail(
-            user.getEmail(),
-            "Réinitialisation de votre mot de passe",
-            "email/reset-password",
-            context
-        );
+            emailService.sendTemplateEmail(
+                user.getEmail(),
+                "Réinitialisation de votre mot de passe",
+                "email/reset-password",
+                context
+            );
+        } catch (Exception e) {
+            log.error("Failed to send reset password email", e);
+            throw new RuntimeException("Failed to send reset password email", e);
+        }
     }
 }

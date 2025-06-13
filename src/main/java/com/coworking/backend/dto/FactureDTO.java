@@ -1,9 +1,11 @@
 package com.coworking.backend.dto;
 
 import lombok.Data;
-
 import java.time.LocalDateTime;
 
+/**
+ * DTO pour les factures
+ */
 @Data
 public class FactureDTO {
     private Long id;

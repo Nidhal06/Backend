@@ -8,6 +8,10 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration Swagger/OpenAPI pour la documentation de l'API.
+ * Configure également le schéma de sécurité JWT pour Swagger.
+ */
 @Configuration
 public class SwaggerConfig {
 
@@ -20,7 +24,8 @@ public class SwaggerConfig {
                         .description("API for managing coworking spaces"))
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                        .addSecuritySchemes("bearerAuth", 
+                            new SecurityScheme()
                                 .name("bearerAuth")
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")

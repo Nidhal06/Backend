@@ -8,37 +8,54 @@ import com.coworking.backend.repository.UserRepository;
 import com.coworking.backend.repository.EspaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des avis sur les espaces.
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AvisService {
 
     private final AvisRepository avisRepository;
     private final UserRepository userRepository;
     private final EspaceRepository espaceRepository;
 
+    /**
+     * Récupère tous les avis
+     */
     public List<AvisDTO> getAllAvis() {
         return avisRepository.findAll().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère les avis d'un espace spécifique
+     */
     public List<AvisDTO> getAvisByEspaceId(Long espaceId) {
         return avisRepository.findByEspaceId(espaceId).stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère un avis par son ID
+     */
     public AvisDTO getAvisById(Long id) {
         Avis avis = avisRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Avis not found"));
         return convertToDto(avis);
     }
 
+    /**
+     * Convertit une entité Avis en DTO
+     */
     private AvisDTO convertToDto(Avis avis) {
         AvisDTO dto = new AvisDTO();
         dto.setId(avis.getId());
@@ -63,6 +80,9 @@ public class AvisService {
         return dto;
     }
     
+    /**
+     * Crée un nouvel avis
+     */
     public AvisDTO createAvis(AvisDTO avisDTO) {
         User user = userRepository.findById(avisDTO.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -81,6 +101,9 @@ public class AvisService {
         return convertToDto(savedAvis);
     }
 
+    /**
+     * Supprime un avis
+     */
     public void deleteAvis(Long id) {
         if (!avisRepository.existsById(id)) {
             throw new ResourceNotFoundException("Avis not found");

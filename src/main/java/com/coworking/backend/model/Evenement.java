@@ -1,23 +1,22 @@
 package com.coworking.backend.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Entité représentant un événement organisé dans l'espace de coworking
+ */
 @Data
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Evenement {
-	@Id
+    
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     private Long id;
@@ -28,6 +27,9 @@ public class Evenement {
     private LocalDateTime endDate;
     private double price;
     private Integer maxParticipants;
+    @Column(name = "is_active")
+    @Getter
+    @Setter
     private boolean isActive;
     
     @ManyToMany
@@ -40,10 +42,9 @@ public class Evenement {
     @EqualsAndHashCode.Exclude
     private Set<User> participants = new HashSet<>();
     
-    @ManyToOne
+    @ManyToOne 
     private EspacePrive espace;
     
-    @OneToMany(mappedBy = "evenement")
+    @OneToMany(mappedBy = "evenement", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Paiement> paiements = new HashSet<>();
-   
 }

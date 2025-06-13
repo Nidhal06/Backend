@@ -1,11 +1,12 @@
 package com.coworking.backend.dto;
 
 import lombok.Data;
-
 import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * DTO pour les réservations avec données associées
+ */
 @Data
 public class ReservationDTO {
     private Long id;
@@ -19,10 +20,10 @@ public class ReservationDTO {
     private String espaceType;
     
     @JsonProperty("paiementMontant")
-    private Double paiementMontant; 
+    private Double paiementMontant;
     
     @JsonProperty("paiementValide")
-    private Boolean paiementValide; 
+    private Boolean paiementValide;
     
     private LocalDateTime dateDebut;
     private LocalDateTime dateFin;

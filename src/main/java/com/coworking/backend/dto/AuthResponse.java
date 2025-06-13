@@ -2,6 +2,9 @@ package com.coworking.backend.dto;
 
 import lombok.Data;
 
+/**
+ * DTO pour la réponse d'authentification
+ */
 @Data
 public class AuthResponse {
     private String token;
@@ -14,5 +17,5 @@ public class AuthResponse {
         this.email = email;
         this.role = role;
         this.userId = userId;
-    } 
+    }
 }

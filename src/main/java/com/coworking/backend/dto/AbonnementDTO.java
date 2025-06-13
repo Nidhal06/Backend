@@ -1,9 +1,11 @@
 package com.coworking.backend.dto;
 
 import lombok.Data;
-
 import java.time.LocalDate;
 
+/**
+ * DTO pour les abonnements avec informations associées
+ */
 @Data
 public class AbonnementDTO {
     private Long id;

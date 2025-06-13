@@ -23,8 +23,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des abonnements aux espaces ouverts.
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AbonnementService {
 
     private final AbonnementRepository abonnementRepository;
@@ -33,18 +37,27 @@ public class AbonnementService {
     private final ModelMapper modelMapper;
     private final PaiementRepository paiementRepository;
 
+    /**
+     * Récupère tous les abonnements
+     */
     public List<AbonnementDTO> getAllAbonnements() {
         return abonnementRepository.findAll().stream()
                 .map(abonnement -> modelMapper.map(abonnement, AbonnementDTO.class))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère un abonnement par son ID
+     */
     public AbonnementDTO getAbonnementById(Long id) {
         Abonnement abonnement = abonnementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Abonnement not found"));
         return modelMapper.map(abonnement, AbonnementDTO.class);
     }
     
+    /**
+     * Récupère les abonnements d'un utilisateur
+     */
     public List<AbonnementDTO> getAbonnementsByUser(Long userId) {
         List<Abonnement> abonnements = abonnementRepository.findByUserId(userId);
         
@@ -57,12 +70,18 @@ public class AbonnementService {
                 .collect(Collectors.toList());
     }
     
+    /**
+     * Récupère le prix de l'abonnement actif d'un utilisateur pour un espace
+     */
     public Double getCurrentAbonnementPrice(Long userId, Long espaceOuvertId) {
         return abonnementRepository.findActiveByUserAndEspace(userId, espaceOuvertId)
                 .map(Abonnement::getPrix)
                 .orElse(null);
     }
     
+    /**
+     * Crée des abonnements pour tous les coworkers
+     */
     @Transactional
     public List<AbonnementDTO> createAbonnementsForAllCoworkers(AbonnementDTO abonnementDTO) {
         // Trouver l'espace ouvert
@@ -96,12 +115,18 @@ public class AbonnementService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Vérifie si un utilisateur a un abonnement valide pour un espace
+     */
     public boolean hasValidAbonnement(Long userId, Long espaceOuvertId) {
         LocalDate today = LocalDate.now();
         return abonnementRepository.existsByUserIdAndEspaceOuvertIdAndDateDebutLessThanEqualAndDateFinGreaterThanEqual(
                 userId, espaceOuvertId, today);
     }
 
+    /**
+     * Crée un nouvel abonnement avec paiement associé
+     */
     @Transactional
     public AbonnementDTO createAbonnement(AbonnementDTO abonnementDTO) {
         User user = userRepository.findById(abonnementDTO.getUserId())
@@ -150,6 +175,9 @@ public class AbonnementService {
         return modelMapper.map(savedAbonnement, AbonnementDTO.class);
     }
 
+    /**
+     * Met à jour un abonnement existant
+     */
     public AbonnementDTO updateAbonnement(Long id, AbonnementDTO abonnementDTO) {
         Abonnement existingAbonnement = abonnementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Abonnement not found"));
@@ -160,6 +188,9 @@ public class AbonnementService {
         return modelMapper.map(updatedAbonnement, AbonnementDTO.class);
     }
 
+    /**
+     * Supprime un abonnement
+     */
     public void deleteAbonnement(Long id) {
         if (!abonnementRepository.existsById(id)) {
             throw new ResourceNotFoundException("Abonnement not found");

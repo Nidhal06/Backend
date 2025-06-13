@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+/**
+ * Service personnalisé pour charger les détails de l'utilisateur pour l'authentification Spring Security.
+ */
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
 
@@ -19,6 +22,11 @@ public class JwtUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Charge les détails de l'utilisateur par email (username)
+     * @return UserDetails personnalisé contenant l'ID, email, mot de passe et rôles
+     * @throws UsernameNotFoundException si l'utilisateur n'est pas trouvé
+     */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username)

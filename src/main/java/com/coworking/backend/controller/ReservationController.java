@@ -8,12 +8,16 @@ import com.coworking.backend.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Contrôleur pour la gestion des réservations
+ */
 @RestController
 @RequestMapping("/api/reservations")
 @RequiredArgsConstructor
@@ -22,33 +26,43 @@ public class ReservationController {
     private final ReservationService reservationService;
     private final UserRepository userRepository;
 
+    /**
+     * Récupère toutes les réservations (admin et réceptionnistes)
+     */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'RECEPTIONISTE')")
     public ResponseEntity<List<ReservationDTO>> getAllReservations() {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
+    /**
+     * Récupère une réservation par son ID
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COWORKER', 'RECEPTIONISTE')")
     public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
         return ResponseEntity.ok(reservationService.getReservationById(id));
     }
 
+    /**
+     * Crée une nouvelle réservation (coworker seulement)
+     */
     @PostMapping
     @PreAuthorize("hasRole('COWORKER')")
     public ResponseEntity<ReservationDTO> createReservation(
             @RequestBody ReservationDTO reservationDTO,
-            Principal principal) {
-        // Get user email from principal and find user
-        User user = userRepository.findByEmail(principal.getName())
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
-        // Set the user ID from the authenticated user
         reservationDTO.setUserId(user.getId());
-        
         return ResponseEntity.ok(reservationService.createReservation(reservationDTO));
     }
     
+    /**
+     * Récupère les réservations d'un utilisateur (vérification du propriétaire)
+     */
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('COWORKER') and #userId == principal.id")
     public ResponseEntity<List<ReservationDTO>> getReservationsByUser(@PathVariable Long userId) {
@@ -57,17 +71,29 @@ public class ReservationController {
                 .collect(Collectors.toList()));
     }
     
+    
+    /**
+     * Récupère les réservations par espace (accessible à tous)
+     */
     @GetMapping("/space/{spaceId}")
     public ResponseEntity<List<ReservationDTO>> getReservationsBySpace(@PathVariable Long spaceId) {
         return ResponseEntity.ok(reservationService.getReservationsBySpace(spaceId));
     }
 
+    /**
+     * Met à jour une réservation existante
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COWORKER', 'RECEPTIONISTE')")
-    public ResponseEntity<ReservationDTO> updateReservation(@PathVariable Long id, @RequestBody ReservationDTO reservationDTO) {
+    public ResponseEntity<ReservationDTO> updateReservation(
+            @PathVariable Long id, 
+            @RequestBody ReservationDTO reservationDTO) {
         return ResponseEntity.ok(reservationService.updateReservation(id, reservationDTO));
     }
 
+    /**
+     * Supprime une réservation (admin et coworker)
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'COWORKER')")
     public ResponseEntity<Void> deleteReservation(@PathVariable Long id) {

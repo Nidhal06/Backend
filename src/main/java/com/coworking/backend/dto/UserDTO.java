@@ -3,6 +3,9 @@ package com.coworking.backend.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO pour les données utilisateur
+ */
 @Data
 @NoArgsConstructor
 public class UserDTO {
@@ -17,11 +20,13 @@ public class UserDTO {
     private String profileImagePath;
     private String type;
     
-	public UserDTO(String username, String email, String profileImagePath, String type) {
-		super();
-		this.username = username;
-		this.email = email;
-		this.profileImagePath = profileImagePath;
-		this.type = type;
-	}  
+    /**
+     * Constructeur pour les cas d'utilisation courants
+     */
+    public UserDTO(String username, String email, String profileImagePath, String type) {
+        this.username = username;
+        this.email = email;
+        this.profileImagePath = profileImagePath;
+        this.type = type;
+    }
 }

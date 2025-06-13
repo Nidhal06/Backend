@@ -2,9 +2,11 @@ package com.coworking.backend.dto;
 
 import lombok.Data;
 import java.time.LocalDateTime;
-
 import com.coworking.backend.model.Paiement;
 
+/**
+ * DTO pour les paiements avec méthode de conversion depuis l'entité
+ */
 @Data
 public class PaiementDTO {
     private Long id;
@@ -17,6 +19,9 @@ public class PaiementDTO {
     private Long evenementId;
     private Long userId;
     
+    /**
+     * Convertit une entité Paiement en DTO
+     */
     public static PaiementDTO fromEntity(Paiement paiement) {
         PaiementDTO dto = new PaiementDTO();
         dto.setId(paiement.getId());

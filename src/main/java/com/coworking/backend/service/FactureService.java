@@ -12,14 +12,20 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des factures.
+ * Gère la génération de PDF et l'envoi par email.
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class FactureService {
 
     private final FactureRepository factureRepository;
@@ -31,18 +37,28 @@ public class FactureService {
     @Value("${app.base-url}") 
     private String baseUrl;
 
+    /**
+     * Récupère toutes les factures
+     */
     public List<FactureDTO> getAllFactures() {
         return factureRepository.findAll().stream()
                 .map(facture -> modelMapper.map(facture, FactureDTO.class))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère une facture par son ID
+     */
     public FactureDTO getFactureById(Long id) {
         Facture facture = factureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Facture not found"));
         return modelMapper.map(facture, FactureDTO.class);
     }
 
+    /**
+     * Crée une nouvelle facture avec génération de PDF et envoi par email
+     * @throws DocumentException en cas d'erreur de génération du PDF
+     */
     public FactureDTO createFacture(FactureDTO factureDTO) throws DocumentException {
         Paiement paiement = paiementRepository.findById(factureDTO.getPaiementId())
                 .orElseThrow(() -> new ResourceNotFoundException("Paiement not found"));
@@ -72,6 +88,9 @@ public class FactureService {
         return modelMapper.map(savedFacture, FactureDTO.class);
     }
 
+    /**
+     * Supprime une facture
+     */
     public void deleteFacture(Long id) {
         if (!factureRepository.existsById(id)) {
             throw new ResourceNotFoundException("Facture not found");

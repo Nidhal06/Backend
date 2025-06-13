@@ -4,6 +4,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO pour les événements avec liste de participants
+ */
 @Data
 public class EvenementDTO {
     private Long id;
@@ -13,8 +16,17 @@ public class EvenementDTO {
     private LocalDateTime endDate;
     private double price;
     private Integer maxParticipants;
-    private boolean isActive;
-    private List<ParticipantDTO> participants; 
+    private Boolean isActive;
+    private List<ParticipantDTO> participants;
     private Long espaceId;
     private String espaceName;
+
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+    
+    public void setIsActive(Boolean active) {
+        isActive = active;
+    }
 }

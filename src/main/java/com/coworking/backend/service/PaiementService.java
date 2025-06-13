@@ -12,13 +12,19 @@ import com.coworking.backend.repository.EvenementRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Service pour la gestion des paiements.
+ * Gère les paiements liés aux réservations, abonnements et événements.
+ */
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class PaiementService {
 
     private final PaiementRepository paiementRepository;
@@ -27,18 +33,27 @@ public class PaiementService {
     private final EvenementRepository evenementRepository;
     private final ModelMapper modelMapper;
 
+    /**
+     * Récupère tous les paiements
+     */
     public List<PaiementDTO> getAllPaiements() {
         return paiementRepository.findAll().stream()
                 .map(PaiementDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Récupère un paiement par son ID
+     */
     public PaiementDTO getPaiementById(Long id) {
         Paiement paiement = paiementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paiement not found"));
         return PaiementDTO.fromEntity(paiement);
     }
 
+    /**
+     * Crée un nouveau paiement avec gestion des différents types
+     */
     public PaiementDTO createPaiement(PaiementDTO paiementDTO) {
         Paiement paiement = new Paiement();
         // Map les champs de base
@@ -47,7 +62,7 @@ public class PaiementService {
         paiement.setDate(LocalDateTime.now());
         paiement.setStatut(PaiementStatut.valueOf(paiementDTO.getStatut()));
         
-        // Gestion des relations
+        // Gestion des relations selon le type
         switch (paiement.getType()) {
             case RESERVATION:
                 if (paiementDTO.getReservationId() != null) {
@@ -76,6 +91,9 @@ public class PaiementService {
         return PaiementDTO.fromEntity(savedPaiement);
     }
 
+    /**
+     * Met à jour un paiement existant
+     */
     public PaiementDTO updatePaiement(Long id, PaiementDTO paiementDTO) {
         Paiement existingPaiement = paiementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Paiement not found"));
@@ -85,7 +103,7 @@ public class PaiementService {
         existingPaiement.setMontant(paiementDTO.getMontant());
         existingPaiement.setStatut(PaiementStatut.valueOf(paiementDTO.getStatut()));
         
-        // Mise à jour des relations
+        // Mise à jour des relations selon le type
         switch (existingPaiement.getType()) {
             case RESERVATION:
                 existingPaiement.setAbonnement(null);
@@ -126,6 +144,9 @@ public class PaiementService {
         return PaiementDTO.fromEntity(updatedPaiement);
     }
 
+    /**
+     * Supprime un paiement
+     */
     public void deletePaiement(Long id) {
         if (!paiementRepository.existsById(id)) {
             throw new ResourceNotFoundException("Paiement not found");
